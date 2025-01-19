@@ -1,4 +1,4 @@
-package com.rsstudio.taskify.presentation.theme
+package com.rsstudio.taskify.ui.theme
 
 import android.app.Activity
 import android.os.Build
