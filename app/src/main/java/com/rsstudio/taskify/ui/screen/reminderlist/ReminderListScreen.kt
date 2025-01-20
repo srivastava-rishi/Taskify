@@ -25,11 +25,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.rsstudio.taskify.component.loader.DefaultCircularIndefiniteBar
+import com.rsstudio.taskify.component.loader.ErrorMessage
+import com.rsstudio.taskify.common.alias.AppString
 import com.rsstudio.taskify.ui.navigation.actions.ReminderListScreenActions
+import androidx.lifecycle.Lifecycle
+import com.rsstudio.taskify.common.PBLifeCycleCallBack
 import com.rsstudio.taskify.ui.theme.Purple40
 import com.rsstudio.taskify.ui.theme.black50
 import com.rsstudio.taskify.ui.theme.grey
@@ -45,47 +51,72 @@ fun ReminderListScreen(
     viewModel: ReminderListViewModel = hiltViewModel(),
     onAction: (reminderListScreenActions: ReminderListScreenActions) -> Unit
 ) {
+
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = {
                 onAction(ReminderListScreenActions.OpenAddOrEditReminderScreen(""))
             }) {
-                Icon(imageVector = Icons.Default.Add, contentDescription = "Add Reminder")
+                Icon(imageVector = Icons.Default.Add, contentDescription = "addReminder")
             }
         }
     ) {
         ReminderContent(
             modifier = Modifier.padding(it),
-            reminders = viewModel.uiState.data(),
+            uiState = viewModel.uiState,
             editReminder = {
-                onAction(ReminderListScreenActions.OpenAddOrEditReminderScreen(""))
+                onAction(ReminderListScreenActions.OpenAddOrEditReminderScreen(it))
             }
         )
+    }
+
+    PBLifeCycleCallBack { _, event ->
+        when (event) {
+            Lifecycle.Event.ON_RESUME -> {
+                viewModel.onEvent(ReminderListUIEvent.OnResumeEvent)
+            }
+
+            else -> {
+                // stub
+            }
+        }
     }
 }
 
 @Composable
 fun ReminderContent(
     modifier: Modifier = Modifier,
-    reminders: List<Reminder>,
-    editReminder: () -> Unit
+    uiState: ReminderListUiState,
+    editReminder: (String) -> Unit
 ) {
-    LazyVerticalGrid(
-        columns = GridCells.Adaptive(minSize = 150.dp),
-        modifier = modifier
-            .background(slateGrey)
-            .fillMaxSize()
-            .padding(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        items(reminders.size) { index ->
-            ReminderCard(
-                reminder = reminders[index],
-                editReminder = {
-                    editReminder()
+    when (uiState.screenState) {
+        ScreenState.ERROR -> {
+            ErrorMessage(errorMessage = stringResource(id = AppString.no_data_found))
+        }
+
+        ScreenState.NONE -> {
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(minSize = 150.dp),
+                modifier = modifier
+                    .background(slateGrey)
+                    .fillMaxSize()
+                    .padding(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(uiState.list.size) { index ->
+                    ReminderCard(
+                        reminder = uiState.list[index],
+                        editReminder = {
+                            editReminder(it)
+                        }
+                    )
                 }
-            )
+            }
+        }
+
+        else -> {
+            DefaultCircularIndefiniteBar()
         }
     }
 }
@@ -93,7 +124,7 @@ fun ReminderContent(
 @Composable
 fun ReminderCard(
     reminder: Reminder,
-    editReminder: () -> Unit
+    editReminder: (String) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -101,7 +132,7 @@ fun ReminderCard(
             .clip(RoundedCornerShape(12.dp))
             .border(1.dp, grey, RoundedCornerShape(12.dp))
             .clickable {
-                editReminder()
+                editReminder(reminder.id)
             }
             .padding(8.dp)
     ) {
@@ -119,7 +150,9 @@ fun ReminderCard(
             )
             Spacer(modifier = Modifier.size(4.dp))
         }
-        ReminderChip(reminder.interval)
+        if (reminder.interval.isNotEmpty()) {
+            ReminderChip(reminder.interval)
+        }
     }
 }
 
@@ -143,38 +176,44 @@ fun ReminderChip(reminderInterval: String) {
 fun ReminderListPreview() {
     val reminders = listOf(
         Reminder(
+            "1",
             title = "Morning Walk",
             description = "Walk in the park at 6 AM.",
             interval = "Hourly"
         ),
         Reminder(
+            "2",
             title = "Buy Groceries",
             description = "Don't forget to buy milk, eggs, and bread.",
             interval = "Every 15 minutes"
         ),
         Reminder(
+            "3",
             title = "",
             description = "Yoga at 7 PM in the living room.",
             interval = "Daily"
         ),
         Reminder(
+            "4",
             title = "Meeting with Client",
             description = "Discuss project details at 11 AM.",
             interval = "Weekly"
         ),
         Reminder(
+            "5",
             title = "",
             description = "Discuss project details at 11 AM.",
             interval = "Weekly"
         ),
         Reminder(
+            "6",
             title = "a",
             description = "",
             interval = "Weekly"
         )
     )
     ReminderContent(
-        reminders = reminders,
+        uiState = ReminderListUiState(),
         editReminder = {}
     )
 }

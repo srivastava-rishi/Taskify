@@ -6,7 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.navArgument
-import com.rsstudio.taskify.ui.common.extension.animatedComposable
+import com.rsstudio.taskify.common.extension.animatedComposable
 import com.rsstudio.taskify.ui.screen.addoreditreminder.AddOrEditReminderScreen
 import com.rsstudio.taskify.ui.screen.reminderlist.ReminderListScreen
 

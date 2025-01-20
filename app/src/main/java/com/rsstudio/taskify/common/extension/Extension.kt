@@ -1,4 +1,4 @@
-package com.rsstudio.taskify.ui.common.extension
+package com.rsstudio.taskify.common.extension
 
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.foundation.clickable

@@ -3,7 +3,7 @@ package com.rsstudio.taskify.domain.db
 import com.rsstudio.taskify.data.repositories.ReminderRepository
 import javax.inject.Inject
 
-class DeleteRepositoryDataByIdToDBUseCase @Inject constructor(private val repository: ReminderRepository) {
+class DeleteReminderByIdToDBUseCase @Inject constructor(private val repository: ReminderRepository) {
 
     suspend operator fun invoke(id: String) = repository.deleteReminderById(id)
 }

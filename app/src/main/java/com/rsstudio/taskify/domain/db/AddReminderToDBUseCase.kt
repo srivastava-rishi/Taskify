@@ -5,7 +5,7 @@ import com.rsstudio.taskify.data.repositories.ReminderRepository
 import java.util.UUID
 import javax.inject.Inject
 
-class AddRepositoryDataToDBUseCase @Inject constructor(private val repository: ReminderRepository) {
+class AddReminderToDBUseCase @Inject constructor(private val repository: ReminderRepository) {
     suspend operator fun invoke(
         title: String,
         description: String,

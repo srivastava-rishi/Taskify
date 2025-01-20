@@ -1,6 +1,6 @@
 package com.rsstudio.taskify.ui.navigation
 
-import com.rsstudio.taskify.ui.common.extension.addRouteArgument
+import com.rsstudio.taskify.common.extension.addRouteArgument
 
 
 /**

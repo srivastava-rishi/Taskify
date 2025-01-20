@@ -13,7 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.rsstudio.taskify.ui.common.extension.crop
+import com.rsstudio.taskify.common.extension.crop
 import com.rsstudio.taskify.ui.theme.ht2
 
 

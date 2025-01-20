@@ -1,4 +1,4 @@
-package com.rsstudio.taskify.ui.common.alias
+package com.rsstudio.taskify.common.alias
 
 import com.rsstudio.taskify.R
 

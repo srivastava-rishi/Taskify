@@ -1,7 +1,7 @@
 package com.rsstudio.taskify.ui.navigation
 
 import androidx.navigation.NavController
-import com.rsstudio.taskify.ui.common.extension.withArg
+import com.rsstudio.taskify.common.extension.withArg
 import com.rsstudio.taskify.ui.navigation.actions.AddOrEditReminderScreenActions
 import com.rsstudio.taskify.ui.navigation.actions.ReminderListScreenActions
 

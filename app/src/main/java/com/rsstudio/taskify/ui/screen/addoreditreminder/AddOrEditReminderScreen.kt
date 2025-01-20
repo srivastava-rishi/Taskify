@@ -13,6 +13,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -21,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,17 +41,19 @@ import com.rsstudio.taskify.component.chip.Chip
 import com.rsstudio.taskify.component.dropdown.DropDown
 import com.rsstudio.taskify.component.dropdown.MenuActionItem
 import com.rsstudio.taskify.component.textfield.OutlinedTextFieldWithLabel
-import com.rsstudio.taskify.ui.common.alias.AppArray
-import com.rsstudio.taskify.ui.common.alias.AppDrawable
-import com.rsstudio.taskify.ui.common.alias.AppString
-import com.rsstudio.taskify.ui.common.extension.noRippleClickable
+import com.rsstudio.taskify.common.alias.AppArray
+import com.rsstudio.taskify.common.alias.AppDrawable
+import com.rsstudio.taskify.common.alias.AppString
+import com.rsstudio.taskify.common.extension.noRippleClickable
 import com.rsstudio.taskify.ui.navigation.actions.AddOrEditReminderScreenActions
+import com.rsstudio.taskify.ui.theme.Purple40
 import com.rsstudio.taskify.ui.theme.ht2
+import com.rsstudio.taskify.ui.theme.label
 import com.rsstudio.taskify.ui.theme.lightBlack
 import com.rsstudio.taskify.ui.theme.white
 
 
-val menuItemId = "1"
+const val menuItemId = "1"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,32 +87,33 @@ fun AddOrEditReminderScreen(
                     }
                 },
                 actions = {
-                    Icon(
-                        modifier = Modifier.noRippleClickable {
-                            openMenu = true
-                        },
-                        painter = painterResource(id = AppDrawable.ic_menu),
-                        contentDescription = ""
-                    )
-
-                    DropDown(
-                        openMenu = openMenu,
-                        menuItems = listOf(
-                            MenuActionItem(
-                                menuItemId,
-                                title = stringResource(id = AppString.delete)
-                            )
-                        ),
-                        onDismissMenu = {
-                            openMenu = false
-                        },
-                        onTitleBarActionClick = {
-                            if (it.id == menuItemId) {
-                                viewModel.onEvent(AddOrEditReminderUIEvent.OnDeleteReminder)
+                    if (viewModel.uiState.editingReminder) {
+                        Icon(
+                            modifier = Modifier.noRippleClickable {
+                                openMenu = true
+                            },
+                            painter = painterResource(id = AppDrawable.ic_menu),
+                            contentDescription = ""
+                        )
+                        DropDown(
+                            openMenu = openMenu,
+                            menuItems = listOf(
+                                MenuActionItem(
+                                    menuItemId,
+                                    title = stringResource(id = AppString.delete)
+                                )
+                            ),
+                            onDismissMenu = {
+                                openMenu = false
+                            },
+                            onTitleBarActionClick = {
+                                if (it.id == menuItemId) {
+                                    viewModel.onEvent(AddOrEditReminderUIEvent.OnDeleteReminder)
+                                }
+                                openMenu = false
                             }
-                            openMenu = false
-                        }
-                    )
+                        )
+                    }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors()
                     .copy(containerColor = white),
@@ -118,6 +125,14 @@ fun AddOrEditReminderScreen(
             uiState = viewModel.uiState,
             onEvent = viewModel::onEvent
         )
+    }
+
+    LaunchedEffect(key1 = viewModel.uiSideEffect) {
+        handelSideEffects(
+            sideEffects = viewModel.uiSideEffect,
+            onAction = onAction
+        )
+        viewModel.resetUiSideEffect()
     }
 }
 
@@ -170,6 +185,39 @@ fun AddOrEditReminderContent(
                 )
             }
         }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        Button(
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Purple40
+            ),
+            enabled = uiState.validateFields(),
+            onClick = {
+                onEvent(AddOrEditReminderUIEvent.OnAddOrUpdateReminder)
+            }
+        ) {
+            Text(
+                text = if (uiState.editingReminder) stringResource(AppString.update) else stringResource(
+                    AppString.add
+                ),
+                style = MaterialTheme.typography.label.copy(color = white)
+            )
+        }
+    }
+}
+
+private fun handelSideEffects(
+    sideEffects: AddOrEditReminderSideEffects,
+    onAction: (actions: AddOrEditReminderScreenActions) -> Unit,
+) {
+    when (sideEffects) {
+        AddOrEditReminderSideEffects.Back -> {
+            onAction(AddOrEditReminderScreenActions.OnBack)
+        }
+
+        else -> {}
     }
 }
 
