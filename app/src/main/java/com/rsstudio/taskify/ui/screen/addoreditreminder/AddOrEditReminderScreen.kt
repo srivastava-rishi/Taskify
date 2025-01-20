@@ -95,7 +95,13 @@ fun AddOrEditReminderScreen(
                 navigationIcon = {
                     Row {
                         Spacer(modifier = Modifier.size(16.dp))
-                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "back")
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "back",
+                            modifier = Modifier.noRippleClickable {
+                                onAction(AddOrEditReminderScreenActions.OnBack)
+                            }
+                        )
                     }
                 },
                 actions = {
@@ -149,6 +155,7 @@ fun AddOrEditReminderScreen(
         viewModel.resetUiSideEffect()
     }
 }
+
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
