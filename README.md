@@ -19,3 +19,7 @@
 - **Language**: Kotlin
 - **Minimum API Level**: 21
 - **API**: Fetch reminders from [JSONPlaceholder](https://jsonplaceholder.typicode.com/todos)
+
+
+## **Apk **
+- You can download the APK by clicking **app-debug.apk.**
