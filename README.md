@@ -21,4 +21,5 @@
 - **API**: Fetch reminders from [JSONPlaceholder](https://jsonplaceholder.typicode.com/todos)
 
 # Apk
-- You can download the APK by clicking **app-debug.apk.**
+- You can download the APK by clicking [app-debug.apk](https://github.com/srivastava-rishi/Taskify/blob/main/app-debug.apk)
+ 
