@@ -3,10 +3,10 @@ package com.rsstudio.taskify.ui.screen.reminderlist
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rsstudio.taskify.domain.db.GetReminderDataFromDBUseCase
+import com.rsstudio.taskify.domain.local.TextToSpeechUseCase
 import com.rsstudio.taskify.domain.mapper.toUiData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.catch
@@ -15,7 +15,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ReminderListViewModel @Inject constructor(
-    private val getReminderDataFromDBUseCase: GetReminderDataFromDBUseCase
+    private val getReminderDataFromDBUseCase: GetReminderDataFromDBUseCase,
+    private val textToSpeechUseCase: TextToSpeechUseCase
 ) : ViewModel() {
 
     var uiState by mutableStateOf(ReminderListUiState())
@@ -28,14 +29,17 @@ class ReminderListViewModel @Inject constructor(
     private fun fetchAllReminders() {
         viewModelScope.launch {
             getReminderDataFromDBUseCase().catch {
+                uiState = uiState.copy(
+                    screenState = ScreenState.ERROR
+                )
             }.collect {
-                if (it.isNotEmpty()) {
-                    uiState = uiState.copy(
+                uiState = if (it.isNotEmpty()) {
+                    uiState.copy(
                         screenState = ScreenState.NONE,
-                        list = it.toUiData()
+                        list = it
                     )
                 } else {
-                    uiState = uiState.copy(
+                    uiState.copy(
                         screenState = ScreenState.ERROR
                     )
                 }
@@ -48,6 +52,11 @@ class ReminderListViewModel @Inject constructor(
             ReminderListUIEvent.OnResumeEvent -> {
                 fetchAllReminders()
             }
+
+            is ReminderListUIEvent.OnLongClick -> {
+                val text = event.reminder.title + event.reminder.description
+                textToSpeechUseCase.speak(text)
+            }
         }
     }
 }
@@ -56,17 +65,21 @@ class ReminderListViewModel @Inject constructor(
 data class ReminderListUiState(
     val screenState: ScreenState = ScreenState.LOADING,
     val list: List<Reminder> = emptyList()
-)
+) {
+    fun isLoading() = screenState == ScreenState.LOADING
+}
 
 sealed interface ReminderListUIEvent {
     data object OnResumeEvent : ReminderListUIEvent
+    data class OnLongClick(val reminder: Reminder) : ReminderListUIEvent
 }
 
 data class Reminder(
     val id: String,
     val title: String,
     val description: String,
-    val interval: String
+    val interval: String,
+    val fromApi: Boolean
 )
 
 enum class ScreenState {

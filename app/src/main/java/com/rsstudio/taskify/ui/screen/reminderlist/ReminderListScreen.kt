@@ -1,8 +1,12 @@
 package com.rsstudio.taskify.ui.screen.reminderlist
 
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,8 +27,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -51,13 +59,21 @@ fun ReminderListScreen(
     viewModel: ReminderListViewModel = hiltViewModel(),
     onAction: (reminderListScreenActions: ReminderListScreenActions) -> Unit
 ) {
+    val permissionGranted = remember { mutableStateOf(false) }
 
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        permissionGranted.value = isGranted
+    }
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(onClick = {
-                onAction(ReminderListScreenActions.OpenAddOrEditReminderScreen(""))
-            }) {
-                Icon(imageVector = Icons.Default.Add, contentDescription = "addReminder")
+            if (!viewModel.uiState.isLoading()) {
+                FloatingActionButton(onClick = {
+                    onAction(ReminderListScreenActions.OpenAddOrEditReminderScreen(""))
+                }) {
+                    Icon(imageVector = Icons.Default.Add, contentDescription = "addReminder")
+                }
             }
         }
     ) {
@@ -66,7 +82,8 @@ fun ReminderListScreen(
             uiState = viewModel.uiState,
             editReminder = {
                 onAction(ReminderListScreenActions.OpenAddOrEditReminderScreen(it))
-            }
+            },
+            onEvent = viewModel::onEvent
         )
     }
 
@@ -81,13 +98,22 @@ fun ReminderListScreen(
             }
         }
     }
+
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            permissionGranted.value = true
+        }
+    }
 }
 
 @Composable
 fun ReminderContent(
     modifier: Modifier = Modifier,
     uiState: ReminderListUiState,
-    editReminder: (String) -> Unit
+    editReminder: (String) -> Unit,
+    onEvent: (ReminderListUIEvent) -> Unit
 ) {
     when (uiState.screenState) {
         ScreenState.ERROR -> {
@@ -109,6 +135,9 @@ fun ReminderContent(
                         reminder = uiState.list[index],
                         editReminder = {
                             editReminder(it)
+                        },
+                        onLongClick = {
+                            onEvent(ReminderListUIEvent.OnLongClick(it))
                         }
                     )
                 }
@@ -124,17 +153,25 @@ fun ReminderContent(
 @Composable
 fun ReminderCard(
     reminder: Reminder,
-    editReminder: (String) -> Unit
+    editReminder: (String) -> Unit,
+    onLongClick: (Reminder) -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth(0.5f)
             .clip(RoundedCornerShape(12.dp))
             .border(1.dp, grey, RoundedCornerShape(12.dp))
-            .clickable {
-                editReminder(reminder.id)
-            }
             .padding(8.dp)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = {
+                        editReminder(reminder.id)
+                    },
+                    onLongPress = {
+                        onLongClick(reminder)
+                    }
+                )
+            }
     ) {
         if (reminder.title.isNotEmpty()) {
             Text(
@@ -179,42 +216,49 @@ fun ReminderListPreview() {
             "1",
             title = "Morning Walk",
             description = "Walk in the park at 6 AM.",
-            interval = "Hourly"
+            interval = "Hourly",
+            fromApi = false
         ),
         Reminder(
             "2",
             title = "Buy Groceries",
             description = "Don't forget to buy milk, eggs, and bread.",
-            interval = "Every 15 minutes"
+            interval = "Every 15 minutes",
+            fromApi = false
         ),
         Reminder(
             "3",
             title = "",
             description = "Yoga at 7 PM in the living room.",
-            interval = "Daily"
+            interval = "Daily",
+            fromApi = false
         ),
         Reminder(
             "4",
             title = "Meeting with Client",
             description = "Discuss project details at 11 AM.",
-            interval = "Weekly"
+            interval = "Weekly",
+            fromApi = false
         ),
         Reminder(
             "5",
             title = "",
             description = "Discuss project details at 11 AM.",
-            interval = "Weekly"
+            interval = "Weekly",
+            fromApi = false
         ),
         Reminder(
             "6",
             title = "a",
             description = "",
-            interval = "Weekly"
+            interval = "Weekly",
+            fromApi = false
         )
     )
     ReminderContent(
         uiState = ReminderListUiState(),
-        editReminder = {}
+        editReminder = {},
+        onEvent = {}
     )
 }
 

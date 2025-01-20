@@ -9,5 +9,6 @@ data class ReminderEntity(
     val title: String,
     val description: String,
     val timeStamp: Long,
-    val reminderInterval: String
+    val reminderInterval: String,
+    val fromApi: Boolean = false
 )

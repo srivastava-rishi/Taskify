@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.rsstudio.taskify"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.rsstudio.taskify"

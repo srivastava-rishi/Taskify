@@ -9,6 +9,17 @@
     <string name="no_data_found">No data found</string>
     <string name="add">Add</string>
     <string name="update">Update</string>
+    <string name="from_api">From API</string>
+    <string name="_10_30_am">10:30 AM</string>
+    <string name="this_is_the_notification_description_which_can_be_long_and_will_be_truncated">This is the notification description, which can be long and will be truncated.</string>
+    <string name="notification_title">Notification Title</string>
+    <string name="created_on">Created on -</string>
+    <string name="permission_needed">Permission Needed</string>
+    <string name="this_permission_is_required_for_reminders_please_grant_it">This permission is required for reminders. Please grant it.</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="you_have_denied_this_permission_permanently_please_enable_it_in_the_app_settings">You have denied this permission permanently. Please enable it in the app settings.</string>
+    <string name="go_to_settings">Go to Settings</string>
     <string-array name="interval_info">
         <item>Every 15 minutes</item>
         <item>Hourly</item>

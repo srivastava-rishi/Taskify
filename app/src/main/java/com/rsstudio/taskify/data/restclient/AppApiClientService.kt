@@ -5,10 +5,10 @@ import retrofit2.Response
 import retrofit2.http.GET
 
 interface AppApiClientService {
-    @GET(".")
+    @GET(PATH_FETCH_REMINDERS)
     suspend fun fetchReminders(): Response<List<ReminderResponse>>
 
     companion object {
-        private const val PATH_EXAMPLE_DATA = "top-headlines"
+        private const val PATH_FETCH_REMINDERS = "todos"
     }
 }

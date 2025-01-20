@@ -14,7 +14,7 @@ accompanistVersion = "0.32.0"
 retrofitVersion = "2.11.0"
 hiltNavigationComposeVersion = "1.0.0"
 hiltWorkVersion = "1.0.0"
-workRuntimeVersion = "2.7.1"
+workRuntimeVersion = "2.10.0"
 accompanistSystemUiControllerVersion = "0.32.0"
 roomVersion = "2.6.1"
 

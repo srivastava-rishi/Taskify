@@ -3,6 +3,7 @@ package com.rsstudio.taskify.ui.screen.addoreditreminder
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -11,10 +12,16 @@ import com.rsstudio.taskify.domain.db.AddReminderToDBUseCase
 import com.rsstudio.taskify.domain.db.DeleteReminderByIdToDBUseCase
 import com.rsstudio.taskify.domain.db.GetReminderByIdUseCase
 import com.rsstudio.taskify.domain.db.UpdateReminderDBUseCase
+import com.rsstudio.taskify.jobs.ReminderWorker
 import com.rsstudio.taskify.ui.navigation.AppArgs
+import com.rsstudio.taskify.ui.screen.addoreditreminder.AddOrEditReminderViewModel.Companion.DAILY
+import com.rsstudio.taskify.ui.screen.addoreditreminder.AddOrEditReminderViewModel.Companion.EVERY_15_MINUTES
+import com.rsstudio.taskify.ui.screen.addoreditreminder.AddOrEditReminderViewModel.Companion.HOURLY
+import com.rsstudio.taskify.util.TimeUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 
@@ -36,7 +43,7 @@ class AddOrEditReminderViewModel @Inject constructor(
         private set
 
     init {
-        uiState = uiState.copy(editingReminder = reminderId.isNotEmpty())
+        uiState = uiState.copy(editingReminder = reminderId.isNotEmpty(), reminderId = reminderId)
         setData()
     }
 
@@ -44,11 +51,13 @@ class AddOrEditReminderViewModel @Inject constructor(
     private fun setData() {
         if (!uiState.editingReminder) return
         viewModelScope.launch {
-            getReminderByIdUseCase(reminderId).catch {  }.collect{
+            getReminderByIdUseCase(reminderId).catch { }.collect {
                 uiState = uiState.copy(
                     titleTextFieldValue = TextFieldValue(text = it.title),
                     descriptionTextFieldValue = TextFieldValue(text = it.description),
-                    selectedReminderInterval = it.reminderInterval
+                    selectedReminderInterval = it.reminderInterval,
+                    timeStamp = it.timeStamp,
+                    fromApi = it.fromApi
                 )
             }
         }
@@ -102,15 +111,21 @@ class AddOrEditReminderViewModel @Inject constructor(
                     reminderInterval = uiState.selectedReminderInterval
                 )
             }
-            uiSideEffect = AddOrEditReminderSideEffects.Back
+            uiSideEffect = AddOrEditReminderSideEffects.OnDone()
         }
     }
 
     private fun deleteReminder() {
         viewModelScope.launch {
             deleteReminderByIdToDBUseCase(reminderId)
-            uiSideEffect = AddOrEditReminderSideEffects.Back
+            uiSideEffect = AddOrEditReminderSideEffects.OnDone(true)
         }
+    }
+
+    companion object {
+        const val EVERY_15_MINUTES = "Every 15 minutes"
+        const val HOURLY = "Hourly"
+        const val DAILY = "Daily"
     }
 }
 
@@ -118,13 +133,57 @@ data class AddOrEditReminderUiState(
     val titleTextFieldValue: TextFieldValue = TextFieldValue(),
     val descriptionTextFieldValue: TextFieldValue = TextFieldValue(),
     val selectedReminderInterval: String = "",
-    val editingReminder: Boolean = false
+    val editingReminder: Boolean = false,
+    val reminderId: String = "",
+    val timeStamp: Long = 0L,
+    val fromApi: Boolean = false
 ) {
-    fun validateFields() = titleTextFieldValue.text.isNotEmpty() || descriptionTextFieldValue.text.isNotEmpty()
+    fun validateFields() =
+        titleTextFieldValue.text.isNotEmpty() || descriptionTextFieldValue.text.isNotEmpty()
+
+    fun getTimeInterval() = when (selectedReminderInterval) {
+        EVERY_15_MINUTES -> {
+            TimeUnit.MINUTES
+        }
+
+        HOURLY -> {
+            TimeUnit.HOURS
+        }
+
+        DAILY -> {
+            TimeUnit.DAYS
+        }
+
+        else -> {
+            TimeUnit.MINUTES
+        }
+    }
+
+    fun getIntervalUnit() = when (selectedReminderInterval) {
+        EVERY_15_MINUTES -> {
+            15L
+        }
+
+        HOURLY -> {
+            1L
+        }
+
+        DAILY -> {
+            1L
+        }
+
+        else -> {
+            15L
+        }
+    }
+
+    fun getTime() = if (timeStamp == 0L) TimeUtil.getTimeStamp() else timeStamp
 }
 
 sealed interface AddOrEditReminderUIEvent {
-    data class OnDescriptionTextChanged(val textFieldValue: TextFieldValue) : AddOrEditReminderUIEvent
+    data class OnDescriptionTextChanged(val textFieldValue: TextFieldValue) :
+        AddOrEditReminderUIEvent
+
     data class OnTitleTextChanged(val textFieldValue: TextFieldValue) : AddOrEditReminderUIEvent
     data class OnSelectReminderInterval(val interval: String) : AddOrEditReminderUIEvent
     data object OnDeleteReminder : AddOrEditReminderUIEvent
@@ -133,5 +192,5 @@ sealed interface AddOrEditReminderUIEvent {
 
 sealed interface AddOrEditReminderSideEffects {
     data object NoEffect : AddOrEditReminderSideEffects
-    data object Back : AddOrEditReminderSideEffects
+    data class OnDone(val delete: Boolean = false) : AddOrEditReminderSideEffects
 }
